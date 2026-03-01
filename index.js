@@ -6,59 +6,43 @@ const { runScan } = require("./scanner");
 const app = express();
 
 app.use(cors());
+app.use(express.json());
 
-// Parse JSON normally
-app.use(express.json({ limit: "1mb", type: ["application/json", "application/*+json"] }));
-
-// Also parse text bodies (some clients send JSON as text)
-app.use(express.text({ type: "*/*", limit: "1mb" }));
-
+// Health check
 app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
 
-// Optional debug route (useful right now)
-app.post("/debug", (req, res) => {
-  res.json({
-    ok: true,
-    contentType: req.headers["content-type"] || null,
-    bodyType: typeof req.body,
-    body: req.body
-  });
-});
+// Helper to read url from either body OR query string
+function getUrl(req) {
+  const fromBody = req.body && typeof req.body.url === "string" ? req.body.url : "";
+  const fromQuery = typeof req.query.url === "string" ? req.query.url : "";
+  return (fromBody || fromQuery).trim();
+}
 
-// POST /scan
-// Supports:
-// - JSON body: { "url": "https://example.com" }
-// - Query: /scan?url=https://example.com
-app.post("/scan", async (req, res) => {
+// GET /scan?url=https://example.com
+app.get("/scan", async (req, res) => {
   try {
-    let url =
-      (req.query?.url || "").toString().trim() ||
-      (req.body?.url || "").toString().trim() ||
-      (req.body?.URL || "").toString().trim();
-
-    // If body came in as a string, try parsing it as JSON
-    if (!url && typeof req.body === "string" && req.body.trim().startsWith("{")) {
-      try {
-        const parsed = JSON.parse(req.body);
-        url = (parsed.url || parsed.URL || "").toString().trim();
-      } catch (_) {
-        // ignore JSON parse errors
-      }
-    }
-
-    if (!url) {
-      return res.status(400).json({ ok: false, error: "Missing url" });
-    }
+    const url = getUrl(req);
+    if (!url) return res.status(400).json({ ok: false, error: "Missing url" });
 
     const data = await runScan(url);
     res.json(data);
   } catch (err) {
-    res.status(500).json({
-      ok: false,
-      error: err?.message || "Scan failed"
-    });
+    res.status(500).json({ ok: false, error: err?.message || "Scan failed" });
+  }
+});
+
+// POST /scan  { "url": "https://example.com" }
+app.post("/scan", async (req, res) => {
+  try {
+    const url = getUrl(req);
+    if (!url) return res.status(400).json({ ok: false, error: "Missing url" });
+
+    const data = await runScan(url);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err?.message || "Scan failed" });
   }
 });
 
