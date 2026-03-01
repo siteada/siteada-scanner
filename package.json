@@ -1,0 +1,19 @@
+{
+  "name": "siteada-scanner",
+  "version": "1.0.0",
+  "description": "SiteADA self-hosted accessibility scanner (axe-core + puppeteer)",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "axe-core": "^4.9.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "puppeteer": "^22.12.0"
+  }
+}
