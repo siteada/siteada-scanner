@@ -6,6 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "node index.js"
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "engines": {
     "node": "20.x"
