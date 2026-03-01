@@ -1,51 +1,49 @@
 // scanner.js
-const pa11y = require("pa11y");
+const puppeteer = require("puppeteer");
+const axeCore = require("axe-core");
 
-/**
- * Runs an accessibility scan on a URL
- * Returns normalized structured results
- */
-async function runScan(url, options = {}) {
+async function runScan(url) {
   if (!url) {
     throw new Error("URL is required");
   }
 
-  const timeout = options.timeout || 60000;
-  const standard = options.standard || "WCAG2AA";
-
-  const result = await pa11y(url, {
-    timeout,
-    standard,
-    includeWarnings: true,
-    includeNotices: false
+  const browser = await puppeteer.launch({
+    args: ["--no-sandbox", "--disable-setuid-sandbox"]
   });
 
-  const issues = (result.issues || []).map(issue => ({
-    code: issue.code,
-    type: issue.type, // error | warning | notice
-    message: issue.message,
-    context: issue.context,
-    selector: issue.selector
-  }));
+  const page = await browser.newPage();
+  await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
 
-  const counts = issues.reduce(
-    (acc, issue) => {
-      acc.total += 1;
-      if (issue.type === "error") acc.errors += 1;
-      if (issue.type === "warning") acc.warnings += 1;
-      if (issue.type === "notice") acc.notices += 1;
-      return acc;
-    },
-    { total: 0, errors: 0, warnings: 0, notices: 0 }
-  );
+  // Inject axe-core into the page
+  await page.addScriptTag({ content: axeCore.source });
+
+  const results = await page.evaluate(async () => {
+    return await axe.run({
+      runOnly: {
+        type: "tag",
+        values: ["wcag2a", "wcag2aa"]
+      }
+    });
+  });
+
+  await browser.close();
+
+  const issues = results.violations.map(v => ({
+    id: v.id,
+    impact: v.impact,
+    description: v.description,
+    help: v.help,
+    helpUrl: v.helpUrl,
+    nodes: v.nodes.length
+  }));
 
   return {
     ok: true,
-    url: result.pageUrl || url,
-    title: result.documentTitle || null,
-    standard,
+    url,
     timestamp: new Date().toISOString(),
-    counts,
+    counts: {
+      total: issues.length
+    },
     issues
   };
 }
