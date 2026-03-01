@@ -6,8 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "node index.js",
-    "postinstall": "node -e \"require('puppeteer'); console.log('puppeteer installed')\""
-  },
+    "postinstall": "npx puppeteer browsers install chrome"
+},
   "engines": {
     "node": "20.x"
   },
