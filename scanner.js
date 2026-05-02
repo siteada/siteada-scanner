@@ -41,14 +41,25 @@ async function runScan(url) {
       helpUrl: v.helpUrl,
       nodes: v.nodes.length
     }));
+const counts = {
+  total: issues.length,
+  critical: 0,
+  serious: 0,
+  moderate: 0,
+  minor: 0
+};
 
+issues.forEach(issue => {
+  if (issue.impact === "critical") counts.critical++;
+  if (issue.impact === "serious") counts.serious++;
+  if (issue.impact === "moderate") counts.moderate++;
+  if (issue.impact === "minor") counts.minor++;
+});
     return {
       ok: true,
       url,
       timestamp: new Date().toISOString(),
-      counts: {
-        total: issues.length
-      },
+      counts,
       issues
     };
 
