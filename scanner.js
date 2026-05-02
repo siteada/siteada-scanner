@@ -55,13 +55,29 @@ issues.forEach(issue => {
   if (issue.impact === "moderate") counts.moderate++;
   if (issue.impact === "minor") counts.minor++;
 });
+    const penalty =
+  counts.critical * 25 +
+  counts.serious * 15 +
+  counts.moderate * 8 +
+  counts.minor * 3;
+
+const score = Math.max(0, 100 - penalty);
+
+let grade = "A";
+if (score < 90) grade = "B";
+if (score < 80) grade = "C";
+if (score < 70) grade = "D";
+if (score < 60) grade = "F";
+    
     return {
-      ok: true,
-      url,
-      timestamp: new Date().toISOString(),
-      counts,
-      issues
-    };
+  ok: true,
+  url,
+  timestamp: new Date().toISOString(),
+  score,
+  grade,
+  counts,
+  issues
+};
 
   } finally {
     if (browser) {
