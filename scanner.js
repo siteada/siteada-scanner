@@ -7,6 +7,11 @@ async function runScan(url) {
     throw new Error("URL is required");
   }
 
+  const scanTimeoutMs = 50000;
+const scanTimeout = new Promise((_, reject) =>
+  setTimeout(() => reject(new Error("Scan timed out")), scanTimeoutMs)
+);
+  
   let browser;
 
   try {
@@ -24,14 +29,17 @@ async function runScan(url) {
     // Inject axe-core
     await page.addScriptTag({ content: axeCore.source });
 
-    const results = await page.evaluate(async () => {
-      return await axe.run({
-        runOnly: {
-          type: "tag",
-          values: ["wcag2a", "wcag2aa"]
-        }
-      });
+    const results = await Promise.race([
+  page.evaluate(async () => {
+    return await axe.run({
+      runOnly: {
+        type: "tag",
+        values: ["wcag2a", "wcag2aa"]
+      }
     });
+  }),
+  scanTimeout
+]);
 
     const issues = results.violations.map(v => ({
       id: v.id,
