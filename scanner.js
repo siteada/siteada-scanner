@@ -7,6 +7,9 @@ async function runScan(url) {
     throw new Error("URL is required");
   }
 
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+  url = "https://" + url;
+}
   const scanTimeoutMs = 50000;
 const scanTimeout = new Promise((_, reject) =>
   setTimeout(() => reject(new Error("Scan timed out")), scanTimeoutMs)
@@ -21,10 +24,14 @@ const scanTimeout = new Promise((_, reject) =>
 
     const page = await browser.newPage();
 
-    await page.goto(url, {
-      waitUntil: "networkidle2",
-      timeout: 45000
-    });
+    try {
+  await page.goto(url, {
+    waitUntil: "networkidle2",
+    timeout: 45000
+  });
+} catch (err) {
+  throw new Error(`Unable to load website: ${err.message}`);
+}
 
     // Inject axe-core
     await page.addScriptTag({ content: axeCore.source });
