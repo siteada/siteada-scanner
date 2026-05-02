@@ -69,16 +69,29 @@ if (score < 80) grade = "C";
 if (score < 70) grade = "D";
 if (score < 60) grade = "F";
     
+   const status = counts.total === 0 ? "Compliant" : "Non-Compliant";
+
+const summary = {
+  status,
+  totalIssues: counts.total,
+  criticalIssues: counts.critical,
+  seriousIssues: counts.serious,
+  moderateIssues: counts.moderate,
+  minorIssues: counts.minor,
+  score,
+  grade
+};
+
     return {
   ok: true,
   url,
   timestamp: new Date().toISOString(),
+  summary,
   score,
   grade,
   counts,
   issues
 };
-
   } finally {
     if (browser) {
       await browser.close();
