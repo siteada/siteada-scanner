@@ -89,14 +89,9 @@ async function performScan(url) {
       timeout: 35000
     });
 
-    // Initialize axe-core directly in the page
+// Initialize axe-core in the page
 await withTimeout(
-  page.evaluate((source) => {
-    const script = document.createElement("script");
-    script.textContent = source;
-    document.documentElement.appendChild(script);
-    script.remove();
-  }, axeCore.source),
+  page.addScriptTag({ content: axeCore.source }),
   15000,
   "Unable to initialize accessibility scanner"
 );
@@ -108,7 +103,7 @@ const axeLoaded = await page.evaluate(() => {
 });
 
 if (!axeLoaded) {
-  throw new Error("axe-core failed to initialize after direct injection");
+  throw new Error("axe-core failed to initialize after addScriptTag");
 }
 
     const results = await withTimeout(
