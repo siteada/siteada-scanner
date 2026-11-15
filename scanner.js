@@ -92,7 +92,7 @@ async function performScan(url) {
 
 // Initialize axe-core in the page
 await withTimeout(
-  page.addScriptTag({ content: axeCore.source }),
+  page.evaluate(axeCore.source),
   15000,
   "Unable to initialize accessibility scanner"
 );
