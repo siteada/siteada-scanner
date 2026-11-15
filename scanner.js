@@ -90,10 +90,35 @@ async function performScan(url) {
     });
 
     await withTimeout(
-      page.addScriptTag({ content: axeCore.source }),
-      15000,
-      "Unable to load accessibility scanner"
-    );
+  page.addScriptTag({ content: axeCore.source }),
+  15000,
+  "Unable to load accessibility scanner"
+);
+
+// Verify axe-core is available before running the scan
+let axeLoaded = await page.evaluate(() => {
+  return typeof window.axe !== "undefined" &&
+         typeof window.axe.run === "function";
+});
+
+if (!axeLoaded) {
+  console.log("axe-core not detected. Attempting reinjection.");
+
+  await withTimeout(
+    page.addScriptTag({ content: axeCore.source }),
+    15000,
+    "Unable to reload accessibility scanner"
+  );
+
+  axeLoaded = await page.evaluate(() => {
+    return typeof window.axe !== "undefined" &&
+           typeof window.axe.run === "function";
+  });
+
+  if (!axeLoaded) {
+    throw new Error("axe-core failed to initialize in the browser");
+  }
+}
 
     const results = await withTimeout(
       page.evaluate(async () => {
