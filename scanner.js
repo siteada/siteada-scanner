@@ -89,35 +89,26 @@ async function performScan(url) {
       timeout: 35000
     });
 
-    await withTimeout(
-  page.addScriptTag({ content: axeCore.source }),
+    // Initialize axe-core directly in the page
+await withTimeout(
+  page.evaluate((source) => {
+    const script = document.createElement("script");
+    script.textContent = source;
+    document.documentElement.appendChild(script);
+    script.remove();
+  }, axeCore.source),
   15000,
-  "Unable to load accessibility scanner"
+  "Unable to initialize accessibility scanner"
 );
 
-// Verify axe-core is available before running the scan
-let axeLoaded = await page.evaluate(() => {
+// Confirm axe-core is available
+const axeLoaded = await page.evaluate(() => {
   return typeof window.axe !== "undefined" &&
          typeof window.axe.run === "function";
 });
 
 if (!axeLoaded) {
-  console.log("axe-core not detected. Attempting reinjection.");
-
-  await withTimeout(
-    page.addScriptTag({ content: axeCore.source }),
-    15000,
-    "Unable to reload accessibility scanner"
-  );
-
-  axeLoaded = await page.evaluate(() => {
-    return typeof window.axe !== "undefined" &&
-           typeof window.axe.run === "function";
-  });
-
-  if (!axeLoaded) {
-    throw new Error("axe-core failed to initialize in the browser");
-  }
+  throw new Error("axe-core failed to initialize after direct injection");
 }
 
     const results = await withTimeout(
