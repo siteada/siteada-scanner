@@ -101,6 +101,13 @@ const axeLoaded = await page.evaluate(() => {
   return typeof window.axe !== "undefined" &&
          typeof window.axe.run === "function";
 });
+    const axeDiagnostics = await page.evaluate(() => ({
+  axeType: typeof window.axe,
+  axeRunType: typeof window.axe?.run,
+  pageUrl: window.location.href
+}));
+
+console.log("axe-core diagnostics:", JSON.stringify(axeDiagnostics));
 
 if (!axeLoaded) {
   throw new Error("axe-core failed to initialize after addScriptTag");
