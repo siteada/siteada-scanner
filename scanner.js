@@ -2,6 +2,7 @@
 
 const puppeteer = require("puppeteer");
 const axeCore = require("axe-core");
+console.log("axe-core source length:", axeCore.source?.length);
 
 function withTimeout(promise, timeoutMs, message) {
   let timer;
